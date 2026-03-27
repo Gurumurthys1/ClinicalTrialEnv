@@ -1,0 +1,18 @@
+# Core server dependencies
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# OpenEnv framework
+openenv-core
+
+# LLM clients for baseline inference
+openai>=1.0.0
+huggingface-hub>=0.22.0
+
+# HTTP client for baseline script
+requests>=2.31.0
+
+# Document parsing for LLM Extraction
+PyPDF2>=3.0.0
+python-docx>=1.1.0

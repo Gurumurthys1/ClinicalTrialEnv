@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClinicalTrialEnv — AI Data Validator</title>
+  <meta name="description" content="LLM-Powered Clinical Trial Data Validator — OpenEnv Environment for AI agent training and evaluation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🧬</span>
+        <div>
+          <span class="logo-title">ClinicalTrialEnv</span>
+          <span class="logo-sub">OpenEnv · v1.0.0</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <span id="status-dot" class="status-dot disconnected"></span>
+        <span id="status-text">Connecting…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main layout -->
+  <main class="main">
+
+    <!-- Sidebar: Task Selection -->
+    <aside class="sidebar">
+      <h2 class="sidebar-title">Select Task</h2>
+
+      <div class="task-cards" id="task-cards">
+        <button class="task-card active" id="btn-easy" onclick="selectTask('easy')">
+          <span class="task-badge easy">EASY</span>
+          <span class="task-name">Basic Field Validation</span>
+          <span class="task-desc">Detect missing/null required fields in patient records</span>
+        </button>
+        <button class="task-card" id="btn-medium" onclick="selectTask('medium')">
+          <span class="task-badge medium">MEDIUM</span>
+          <span class="task-name">Protocol Rule Reasoning</span>
+          <span class="task-desc">Detect violations of clinical trial protocol rules</span>
+        </button>
+        <button class="task-card" id="btn-hard" onclick="selectTask('hard')">
+          <span class="task-badge hard">HARD</span>
+          <span class="task-name">Advanced Audit Analysis</span>
+          <span class="task-desc">Cross-field inconsistencies, temporal errors & audit anomalies</span>
+        </button>
+      </div>
+
+      <div class="session-info">
+        <div class="info-row">
+          <span class="info-label">Session ID</span>
+          <span class="info-value mono" id="session-id">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Expected Errors</span>
+          <span class="info-value" id="expected-count">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Step Count</span>
+          <span class="info-value" id="step-count">0</span>
+        </div>
+      </div>
+
+      <!-- CSV Upload -->
+      <div class="csv-upload-card">
+        <h3 class="csv-upload-title">📁 Upload CSV Data</h3>
+        <div class="csv-dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file-input').click()">
+          <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCSVUpload(this)" />
+          <div class="dropzone-icon">⬆️</div>
+          <div class="dropzone-text">Click or drag CSV file here</div>
+          <div class="dropzone-hint">Supports .csv with headers</div>
+        </div>
+        <div id="csv-file-info" class="csv-file-info hidden">
+          <div class="csv-file-name" id="csv-file-name"></div>
+          <div class="csv-file-stats" id="csv-file-stats"></div>
+          <button class="csv-clear-btn" onclick="clearCSVData()">✕ Clear</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center: Data Panel -->
+    <section class="data-panel">
+      <div class="panel-header">
+        <h2 id="data-title">Patient Records</h2>
+        <div class="tabs">
+          <button class="tab active" id="tab-records" onclick="switchTab('records')">Patient Records</button>
+          <button class="tab" id="tab-rules" onclick="switchTab('rules')">Protocol Rules</button>
+          <button class="tab" id="tab-audit" onclick="switchTab('audit')">Audit Logs</button>
+        </div>
+      </div>
+
+      <div id="panel-records" class="panel-content active">
+        <div id="records-container" class="records-grid"></div>
+      </div>
+      <div id="panel-rules" class="panel-content">
+        <div class="protocol-editor">
+          <div class="protocol-editor-header">
+            <h3 class="protocol-editor-title">📋 Protocol Rules</h3>
+            <span class="protocol-count" id="protocol-count">0 rules</span>
+          </div>
+          <ul id="rules-list" class="rules-list editable"></ul>
+          <div class="add-rule-area">
+            <input type="text" id="new-rule-input" class="new-rule-input" placeholder="Type a new protocol rule…" />
+            <button class="add-rule-btn" onclick="addProtocolRule()">+ Add Rule</button>
+            <button class="extract-rule-btn" onclick="toggleExtractModal()">🪄 Extract Rules via LLM</button>
+          </div>
+          
+          <!-- LLM Extraction Modal (hidden by default) -->
+          <div id="extract-modal" class="extract-modal hidden">
+            <h4>🪄 Extract Protocol Rules</h4>
+            <p>Upload a protocol document (.pdf, .docx, .txt) OR paste text below.</p>
+            <input type="file" id="extract-file-input" accept=".txt,.pdf,.docx" class="extract-file-input" />
+            <div style="text-align: center; color: var(--text-muted); margin: 8px 0; font-size: 11px;">— OR —</div>
+            <textarea id="extract-text-input" placeholder="e.g. 'Patients must be over 18 years old. The required drug dose is 50mg. Visits must occur within 30 days.'"></textarea>
+            <div class="extract-actions">
+              <button class="extract-cancel-btn" onclick="toggleExtractModal()">Cancel</button>
+              <button class="extract-submit-btn" id="extract-submit-btn" onclick="extractRules()">Extract Rules</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="panel-audit" class="panel-content">
+        <div id="audit-container" class="audit-list"></div>
+      </div>
+    </section>
+
+    <!-- Right: Action Panel -->
+    <section class="action-panel">
+      <div class="panel-header">
+        <h2>Submit Findings</h2>
+      </div>
+
+      <div class="task-description" id="task-desc-box">
+        Loading task description…
+      </div>
+
+      <div class="finding-form">
+        <label class="form-label">Findings <span class="hint">(one per line)</span></label>
+        <textarea
+          id="findings-input"
+          class="findings-textarea"
+          placeholder="e.g. Missing Age for P001&#10;Protocol violation: P034 received dose on Day 19…"
+          rows="6"
+        ></textarea>
+
+        <label class="form-label">Explanation <span class="hint">(optional)</span></label>
+        <textarea
+          id="explanation-input"
+          class="explanation-textarea"
+          placeholder="Brief summary of your analysis…"
+          rows="3"
+        ></textarea>
+
+        <button id="submit-btn" class="submit-btn" onclick="submitFindings()" disabled>
+          <span id="submit-label">⟶ Submit Findings</span>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div id="results-panel" class="results-panel hidden">
+        <div class="score-header">
+          <span class="score-label">Validation Score</span>
+          <span id="score-value" class="score-value">0.00</span>
+        </div>
+        <div class="score-bar-bg">
+          <div id="score-bar" class="score-bar" style="width: 0%"></div>
+        </div>
+        <div id="result-message" class="result-message"></div>
+        <div id="findings-list" class="submitted-findings"></div>
+        <button class="reset-btn" onclick="resetEpisode()">↺ New Episode</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

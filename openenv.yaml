@@ -1,0 +1,16 @@
+name: clinical_trial_env
+version: "1.0.0"
+description: LLM-Powered Clinical Trial Data Validator — validates patient records, detects protocol violations, and analyzes audit trails.
+tasks:
+  - id: easy
+    name: Basic Field Validation
+    difficulty: easy
+    description: Detect missing or invalid required fields in patient records.
+  - id: medium
+    name: Protocol Rule Reasoning
+    difficulty: medium
+    description: Detect violations of clinical trial protocol rules using LLM reasoning.
+  - id: hard
+    name: Advanced Data Integrity and Audit Analysis
+    difficulty: hard
+    description: Detect cross-field inconsistencies, temporal data errors, and audit trail anomalies.
