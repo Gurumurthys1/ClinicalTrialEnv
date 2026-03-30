@@ -505,6 +505,13 @@ async function autoValidate() {
       setTimeout(() => finInput.style.backgroundColor = "var(--bg-surface)", 600);
       
       submitBtn.disabled = false;
+      
+      // Automatically submit the findings to get the reward!
+      setTimeout(() => {
+        if (!submitBtn.disabled && document.getElementById("findings-input").value.trim() !== "") {
+          submitFindings();
+        }
+      }, 800);
     } else {
       alert("Auto-validation failed: " + (data.error || "Unknown error"));
     }
