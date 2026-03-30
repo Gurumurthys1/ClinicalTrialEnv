@@ -501,23 +501,56 @@ body::before {
 }
 
 .auto-validate-btn {
-  padding: 6px 12px;
-  background: rgba(183, 148, 244, 0.15);
-  border: 1px solid rgba(183, 148, 244, 0.4);
-  border-radius: var(--radius-sm);
-  color: var(--accent-purple);
-  font-size: 11px;
-  font-weight: 600;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(183, 148, 244, 0.1), rgba(99, 179, 237, 0.1));
+  border: 1px solid rgba(183, 148, 244, 0.6);
+  border-radius: 20px; /* pill shape */
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(183, 148, 244, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
 .auto-validate-btn:hover:not(:disabled) {
-  background: rgba(183, 148, 244, 0.25);
-  box-shadow: 0 2px 8px rgba(183, 148, 244, 0.2);
+  background: linear-gradient(135deg, rgba(183, 148, 244, 0.25), rgba(99, 179, 237, 0.25));
+  border-color: var(--accent-purple);
+  box-shadow: 0 0 20px rgba(183, 148, 244, 0.5), 0 0 10px rgba(99, 179, 237, 0.3);
+  transform: translateY(-1px) scale(1.02);
 }
+
+.auto-validate-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
 .auto-validate-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
+.auto-validate-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-20deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
 }
 
 .extract-rule-btn {
