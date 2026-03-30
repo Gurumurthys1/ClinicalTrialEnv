@@ -141,7 +141,10 @@
       </div>
 
       <div class="finding-form">
-        <label class="form-label">Findings <span class="hint">(one per line)</span></label>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" style="margin: 0;">Findings <span class="hint">(one per line)</span></label>
+          <button id="auto-validate-btn" class="auto-validate-btn" onclick="autoValidate()">🪄 Auto-Find with AI</button>
+        </div>
         <textarea
           id="findings-input"
           class="findings-textarea"

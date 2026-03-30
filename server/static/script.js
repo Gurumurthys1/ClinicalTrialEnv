@@ -7,6 +7,7 @@ const API_URL = "/api";
 let sessionId = null;
 let currentTask = "easy";
 let episodeActive = false;
+let currentRecords = [];
 
 // ── DOM refs ──────────────────────────────────────────────────
 const statusDot  = document.getElementById("status-dot");
@@ -88,6 +89,7 @@ function renderObservation(obs) {
 }
 
 function renderRecords(records) {
+  currentRecords = records;
   const container = document.getElementById("records-container");
   if (!records.length) {
     container.innerHTML = "<p style='color:var(--text-muted);font-size:13px'>No records for this task.</p>";
@@ -459,3 +461,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ── Init ───────────────────────────────────────────────────────
 resetEpisode();
+
+// ── Auto Validate (LLM) ───────────────────────────────────────────────
+async function autoValidate() {
+  if (!currentRecords || currentRecords.length === 0) {
+    alert("No records available to validate!");
+    return;
+  }
+
+  const btn = document.getElementById("auto-validate-btn");
+  const originalText = btn.innerHTML;
+  btn.innerHTML = "⏳ Validating...";
+  btn.disabled = true;
+
+  try {
+    // 1. Fetch the exact current protocols
+    const rulesRes = await fetch(`/api/protocols?task_id=${currentTask}`);
+    const rulesData = await rulesRes.json();
+    const rules = rulesData.protocols || [];
+
+    // 2. Ask backend to auto-validate using Llama 3.1
+    const res = await fetch(`/api/auto-validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        task_id: currentTask,
+        records: currentRecords,
+        protocol_rules: rules
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      // 3. Populate UI
+      const findingsOutput = (data.findings || []).join("\n");
+      document.getElementById("findings-input").value = findingsOutput;
+      document.getElementById("explanation-input").value = data.explanation || "";
+      
+      // Flash the background of the textareas to indicate they were auto-filled
+      const finInput = document.getElementById("findings-input");
+      finInput.style.transition = "background-color 0.5s ease";
+      finInput.style.backgroundColor = "rgba(56, 236, 182, 0.2)";
+      setTimeout(() => finInput.style.backgroundColor = "var(--bg-surface)", 600);
+      
+      submitBtn.disabled = false;
+    } else {
+      alert("Auto-validation failed: " + (data.error || "Unknown error"));
+    }
+  } catch (e) {
+    alert("Warning: Auto-validation failed: " + e.message);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}

@@ -407,6 +407,90 @@ async def extract_rules_from_text(
             content={"error": f"Extraction failed: {str(e)}"}
         )
 
+class AutoValidateRequest(BaseModel):
+    task_id: str
+    records: list
+    protocol_rules: list
+
+@app.post("/api/auto-validate")
+def auto_validate(req: AutoValidateRequest):
+    """Use HuggingFace LLM to automatically find errors in the given records based on the given rules."""
+    hf_token = os.environ.get("HF_TOKEN")
+    if not hf_token:
+        # Fallback for demo mode
+        return JSONResponse(content={
+            "findings": [
+                "Mock finding: Missing Age for Patient (Demo Mode)",
+                "Mock finding: Protocol violation: wrong dose (Demo Mode)"
+            ],
+            "explanation": "No HF_TOKEN was set. Returning mock findings for UI demonstration."
+        })
+
+    client = InferenceClient(
+        provider="novita",
+        api_key=hf_token
+    )
+
+    records_str = json.dumps(req.records, indent=2)
+    rules_str = "\n".join(f"- {r}" for r in req.protocol_rules)
+
+    prompt = f"""You are a clinical trial data validator. Your task: {req.task_id.upper()}
+
+Protocol Rules:
+{rules_str}
+
+Patient Records:
+{records_str}
+
+Instructions:
+Analyze the data carefully and identify ALL errors, violations, or anomalies.
+Return your response as a JSON object with two fields:
+  "findings": a list of strings, each describing one specific error found
+  "explanation": a brief overall summary of your analysis
+
+Important: Include the Patient ID in each finding if applicable.
+Respond ONLY with valid JSON. No markdown."""
+
+    try:
+        response = client.chat.completions.create(
+            model="meta-llama/Llama-3.1-8B-Instruct",
+            messages=[
+                {"role": "system", "content": "You are an expert clinical trial data auditor. Always respond with valid JSON only. No markdown."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=600,
+            temperature=0.1
+        )
+        content = response.choices[0].message.content.strip()
+        
+        # Clean up common LLM formatting issues
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        try:
+            parsed = json.loads(content)
+            findings = parsed.get("findings", [])
+            explanation = parsed.get("explanation", "")
+        except Exception:
+            # Fallback
+            findings = [r.strip("-* ") for r in content.split('\n') if r.strip("-* ")]
+            explanation = "Extracted from malformed JSON output"
+
+        return JSONResponse(content={
+            "findings": findings,
+            "explanation": explanation
+        })
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Validation failed: {str(e)}"}
+        )
+
 # ── /api/upload — CSV Data Upload ─────────────────────────────────────────────
 
 uploaded_data = {

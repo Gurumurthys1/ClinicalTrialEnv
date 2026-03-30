@@ -500,6 +500,26 @@ body::before {
   box-shadow: 0 4px 16px rgba(56, 236, 182, 0.3);
 }
 
+.auto-validate-btn {
+  padding: 6px 12px;
+  background: rgba(183, 148, 244, 0.15);
+  border: 1px solid rgba(183, 148, 244, 0.4);
+  border-radius: var(--radius-sm);
+  color: var(--accent-purple);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.auto-validate-btn:hover:not(:disabled) {
+  background: rgba(183, 148, 244, 0.25);
+  box-shadow: 0 2px 8px rgba(183, 148, 244, 0.2);
+}
+.auto-validate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .extract-rule-btn {
   padding: 10px 14px;
   background: rgba(183, 148, 244, 0.1);
