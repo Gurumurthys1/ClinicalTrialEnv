@@ -8,6 +8,8 @@ let sessionId = null;
 let currentTask = "easy";
 let episodeActive = false;
 let currentRecords = [];
+let currentAuditLogs = [];
+let currentTaskDesc = "";
 
 // ── DOM refs ──────────────────────────────────────────────────
 const statusDot  = document.getElementById("status-dot");
@@ -83,9 +85,11 @@ async function resetEpisode() {
 
 // ── Render observation data ────────────────────────────────────
 function renderObservation(obs) {
+  currentTaskDesc = obs.task_description || "";
   renderRecords(obs.patient_records || []);
   renderRules(obs.protocol_rules || []);
-  renderAudit(obs.audit_logs || []);
+  currentAuditLogs = obs.audit_logs || [];
+  renderAudit(currentAuditLogs);
 }
 
 function renderRecords(records) {
@@ -486,8 +490,10 @@ async function autoValidate() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         task_id: currentTask,
+        task_description: currentTaskDesc,
         records: currentRecords,
-        protocol_rules: rules
+        protocol_rules: rules,
+        audit_logs: currentAuditLogs
       })
     });
     const data = await res.json();

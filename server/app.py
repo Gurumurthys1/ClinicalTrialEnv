@@ -409,8 +409,10 @@ async def extract_rules_from_text(
 
 class AutoValidateRequest(BaseModel):
     task_id: str
+    task_description: str = ""
     records: list
     protocol_rules: list
+    audit_logs: list = []
 
 @app.post("/api/auto-validate")
 def auto_validate(req: AutoValidateRequest):
@@ -433,15 +435,23 @@ def auto_validate(req: AutoValidateRequest):
 
     records_str = json.dumps(req.records, indent=2)
     rules_str = "\n".join(f"- {r}" for r in req.protocol_rules)
+    audit_str = "\n".join(f"- {l}" for l in req.audit_logs) if req.audit_logs else ""
 
     prompt = f"""You are a clinical trial data validator. Your task: {req.task_id.upper()}
+
+Task Description:
+{req.task_description}
 
 Protocol Rules:
 {rules_str}
 
 Patient Records:
 {records_str}
+"""
+    if audit_str:
+        prompt += f"\nAudit Trail Logs:\n{audit_str}\n"
 
+    prompt += """
 Instructions:
 Analyze the data carefully and identify ALL errors, violations, or anomalies.
 Return your response as a JSON object with two fields:
